@@ -1,12 +1,13 @@
-public class Coupon
+namespace Mango.Services.CouponApi.Models
 {
-    [Key]
-    public int CouponId { get; set; }
-    [Required]
-    public string CouponCode { get; set; }
-    [Required]
-    public double MinAmount { get; set; }
-    [Required]
-    public double DiscountAmount { get; set; }
 
+    public class Coupon
+        {
+            public int CouponId { get; set; }
+            public string CouponCode { get; set; } = string.Empty;
+            public double MinAmount { get; set; }
+
+            public double DiscountAmount { get; set; }
+
+        }
 }
