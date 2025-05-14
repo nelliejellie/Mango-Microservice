@@ -52,7 +52,8 @@ namespace Mango.Services.AuthApi.Services
                 var result = await _userManager.CheckPasswordAsync(user, userDto.Password);
                 if (result)
                 {
-                    var token = _tokenService.GenerateToken(user);
+                    var roles = await _userManager.GetRolesAsync(user);
+                    var token = _tokenService.GenerateToken(user,roles);
                     var userResponse = new UserDto()
                     {
                         Id = user.Id,

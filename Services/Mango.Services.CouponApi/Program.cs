@@ -2,27 +2,51 @@ using Mango.Services.CouponApi.Data;
 using Microsoft.EntityFrameworkCore;
 using Mango.Services.CouponApi.Models.DTO;
 using Mango.Services.CouponApi.Extensions;
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("localConnection")));
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+var secret = builder.Configuration.GetValue<string>("ApiSettings:Secret");
+var issuer = builder.Configuration.GetValue<string>("ApiSettings:Issuer");
+var audience = builder.Configuration.GetValue<string>("ApiSettings:Audience");
+
+var key = Encoding.UTF8.GetBytes(secret);
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+}).AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(key),
+        ValidateIssuer = true,
+        ValidIssuer = issuer,
+        ValidateAudience = true,
+        ValidAudience = audience
+    };
+});
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
-
+app.UseAuthentication();
+app.UseAuthorization();
 app.MapCouponEndpoints();
 
 
@@ -36,7 +60,7 @@ void ApplyMigrations()
     using (var scope = app.Services.CreateScope())
     {
         var _db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        if(_db.Database.GetPendingMigrations().Any())
+        if (_db.Database.GetPendingMigrations().Any())
         {
             _db.Database.Migrate();
         }

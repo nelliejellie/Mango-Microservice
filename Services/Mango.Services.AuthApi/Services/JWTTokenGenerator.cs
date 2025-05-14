@@ -18,16 +18,19 @@ namespace Mango.Services.AuthApi.Services
             _jwtoptions = jwtoptions.Value;
         }
 
-        public string GenerateToken(ApplicationUser user)
+        public string GenerateToken(ApplicationUser user, IEnumerable<string> roles)
         {
+            var tokenHnadler = new JwtSecurityTokenHandler();
+            var key = Encoding.UTF8.GetBytes(_jwtoptions.Key);
             var claims = new List<Claim>
             {
                 new Claim(JwtRegisteredClaimNames.Sub, user.Id),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
                 new Claim(JwtRegisteredClaimNames.Name, user.UserName),
             };
+            claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
             var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.UTF8.GetBytes(_jwtoptions.Key);
+         
             var creds = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature);
             var tokenDescriptor = new SecurityTokenDescriptor
             {

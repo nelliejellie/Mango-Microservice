@@ -6,5 +6,6 @@ namespace Mango.Web.Models.DTO
         public string? Name { get; set; }
         public string? Email { get; set; }
         public string? PhoneNumber { get; set; }
+        public string Token { get; set; }
     }
 }
