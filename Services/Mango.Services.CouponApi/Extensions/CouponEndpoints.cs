@@ -30,9 +30,10 @@ namespace Mango.Services.CouponApi.Extensions
 
                 return Results.Ok(response);
             })
+            .RequireAuthorization()
             .WithName("GetCoupons")
             .WithOpenApi();
-
+             
             app.MapGet("/coupon/discount/{code}", async (string code, AppDbContext _db) =>
             {
                 var response = new ResponseDto();

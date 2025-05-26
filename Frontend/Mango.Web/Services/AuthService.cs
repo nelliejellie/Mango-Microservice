@@ -24,7 +24,7 @@ namespace Mango.Web.Services
                 Url = $"{_authApiBase}/api/AuthAPI/login",
                 Data = loginRequest
             };
-            return await _baseService.SendAsync(request);
+            return await _baseService.SendAsync(request,false);
         }
 
         public async Task<ResponseDto?> RegisterAsync(RegisterationRequestDto registerRequest)
@@ -46,7 +46,7 @@ namespace Mango.Web.Services
                 Url = $"{_authApiBase}/api/AuthAPI/assignrole",
                 Data = roleAssignDto
             };
-            return await _baseService.SendAsync(request);
+            return await _baseService.SendAsync(request,false);
         }
     }
 }

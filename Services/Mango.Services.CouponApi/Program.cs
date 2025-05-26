@@ -5,6 +5,7 @@ using Mango.Services.CouponApi.Extensions;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,11 +14,35 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("localConnection")));
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(option =>
+{
+    option.AddSecurityDefinition(name: JwtBearerDefaults.AuthenticationScheme, securityScheme: new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Description = "Enter the Bearer Authorisation string as following: `Bearer Generrated-JWT-token`",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = "Bearer"
+    });
+    option.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = JwtBearerDefaults.AuthenticationScheme
+                }
+            }, new string[]{}
+            
+        } 
+    });
+});
 
-var secret = builder.Configuration.GetValue<string>("ApiSettings:Secret");
-var issuer = builder.Configuration.GetValue<string>("ApiSettings:Issuer");
-var audience = builder.Configuration.GetValue<string>("ApiSettings:Audience");
+var secret = builder.Configuration.GetValue<string>("ApiSettings:JWTOptions:Key");
+var issuer = builder.Configuration.GetValue<string>("ApiSettings:JWTOptions:Issuer");
+var audience = builder.Configuration.GetValue<string>("ApiSettings:JWTOptions:Audience");
 
 var key = Encoding.UTF8.GetBytes(secret);
 
@@ -37,6 +62,7 @@ builder.Services.AddAuthentication(options =>
         ValidAudience = audience
     };
 });
+builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
