@@ -33,7 +33,7 @@ namespace Mango.Web.Services
                 if(withBearer)
                 {
                     var token = _tokenProviderService.GetToken();
-                    message.Headers.Add("Authorization", $"{token}");
+                    message.Headers.Add("Authorization", $"Bearer {token}");
                 }
                 message.RequestUri = new Uri(request.Url);
 
@@ -59,6 +59,10 @@ namespace Mango.Web.Services
                         message.Method = HttpMethod.Get;
                         break;
                 }
+
+                //var clients = new HttpClient();
+                //var responses = await clients.GetAsync("https://localhost:7000/api/product");
+                //var result = await responses.Content.ReadAsStringAsync();
 
                 apiResponse = await client.SendAsync(message);
             

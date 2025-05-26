@@ -42,7 +42,7 @@ namespace Mango.Web.Services
             {
                 ApiType = ApiType.GET,
                 Url = couponApiBase + "/api/product"
-            });
+            },false);
         }
 
 
@@ -52,7 +52,7 @@ namespace Mango.Web.Services
             return await _baseService.SendAsync(new RequestDto()
             {
                 ApiType = ApiType.GET,
-                Url = couponApiBase + "/api/product/" + id
+                Url = couponApiBase + "/api/product" + id
             });
         }
 
