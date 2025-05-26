@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Mango.Services.ProductApi.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/product")]
     [ApiController]
     [Authorize]
     public class ProductApiController : ControllerBase
@@ -41,6 +41,9 @@ namespace Mango.Services.ProductApi.Controllers
                     };
                 }
                 _responseDto.Result = objList;
+                _responseDto.Message = "Items collected successfully";
+                _responseDto.StatusCode = 200;
+                _responseDto.Success = true;
             }
             catch (Exception ex)
             {
