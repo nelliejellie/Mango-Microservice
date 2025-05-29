@@ -73,3 +73,9 @@ C:\Users\emeka.ewelike\source\repos\Mango\Frontend\Mango.Web\obj\Debug\net8.0\re
 C:\Users\emeka.ewelike\source\repos\Mango\Frontend\Mango.Web\obj\Debug\net8.0\Mango.Web.pdb
 C:\Users\emeka.ewelike\source\repos\Mango\Frontend\Mango.Web\obj\Debug\net8.0\Mango.Web.genruntimeconfig.cache
 C:\Users\emeka.ewelike\source\repos\Mango\Frontend\Mango.Web\obj\Debug\net8.0\ref\Mango.Web.dll
+C:\Users\emeka.ewelike\source\repos\Mango\Frontend\Mango.Web\bin\Debug\net8.0\Microsoft.Bcl.Memory.dll
+C:\Users\emeka.ewelike\source\repos\Mango\Frontend\Mango.Web\bin\Debug\net8.0\Microsoft.IdentityModel.Abstractions.dll
+C:\Users\emeka.ewelike\source\repos\Mango\Frontend\Mango.Web\bin\Debug\net8.0\Microsoft.IdentityModel.JsonWebTokens.dll
+C:\Users\emeka.ewelike\source\repos\Mango\Frontend\Mango.Web\bin\Debug\net8.0\Microsoft.IdentityModel.Logging.dll
+C:\Users\emeka.ewelike\source\repos\Mango\Frontend\Mango.Web\bin\Debug\net8.0\Microsoft.IdentityModel.Tokens.dll
+C:\Users\emeka.ewelike\source\repos\Mango\Frontend\Mango.Web\bin\Debug\net8.0\System.IdentityModel.Tokens.Jwt.dll
