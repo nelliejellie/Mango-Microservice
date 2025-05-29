@@ -77,7 +77,7 @@ namespace Mango.Web.Controllers
             };
 
             ViewBag.RoleList = roleList;
-            return View();
+            return RedirectToAction("Index");
         }
 
         public async Task<IActionResult> Logout()
@@ -90,24 +90,32 @@ namespace Mango.Web.Controllers
         [HttpPost]
         public async Task<IActionResult> Login(LoginRequestDto loginRequest)
         {
-           
-            var res = await _authService.LoginAsync(loginRequest);
-           
-            if (res != null && res.Success)
+            try
             {
-                var response = JsonConvert.DeserializeObject<LoginResponseDto>(Convert.ToString(res.Result));
-                await SignInUser(response);
-                _tokenProviderService.SetToken(response.Token);
-                TempData["success"] = "Login Successful";
-                return RedirectToAction("Index", "Home");
-            }
-            else
-            {
-                ModelState.AddModelError("CustomError", res.Message);
-                TempData["error"] = "Login Failed";
+                var res = await _authService.LoginAsync(loginRequest);
+
+                if (res != null && res.Success)
+                {
+                    var response = JsonConvert.DeserializeObject<LoginResponseDto>(Convert.ToString(res.Result));
+                    await SignInUser(response);
+                    _tokenProviderService.SetToken(response.Token);
+                    TempData["success"] = "Login Successful";
+                    return RedirectToAction("Index", "Home");
+                }
+                else
+                {
+                    ModelState.AddModelError("CustomError", res.Message);
+                    TempData["error"] = "Login Failed";
+                    return View(loginRequest);
+                }
                 return View(loginRequest);
             }
-            return View(loginRequest);
+            catch (Exception)
+            {
+
+                throw;
+            }
+            
         }
 
         private async Task SignInUser(LoginResponseDto loginResponse)
