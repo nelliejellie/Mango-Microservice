@@ -8,7 +8,6 @@ namespace Mango.Services.ProductApi.Controllers
 {
     [Route("api/product")]
     [ApiController]
-    [Authorize]
     public class ProductApiController : ControllerBase
     {
         private readonly ILogger<ProductApiController> _logger;
@@ -70,7 +69,8 @@ namespace Mango.Services.ProductApi.Controllers
                     CategoryName = obj.CategoryName,
                     ImageUrl = obj.ImageUrl
                 };
-                _responseDto.Result = obj;
+                _responseDto.Result = dto;
+                _responseDto.Success = true;
             }
             catch (Exception ex)
             {

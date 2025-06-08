@@ -1,6 +1,10 @@
 
 
+using Mango.MessagePublisher.Services;
 using Mango.Services.ShoppingCartAPI.Data;
+using Mango.Services.ShoppingCartAPI.Service;
+using Mango.Services.ShoppingCartAPI.Service.IService;
+using Mango.Services.ShoppingCartAPI.Utility;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -24,6 +28,13 @@ namespace Mango.Services.ShoppingCart
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddEndpointsApiExplorer();
+            builder.Services.AddScoped<IProductService, ProductService>();
+            builder.Services.AddHttpContextAccessor();
+            builder.Services.AddScoped<BackendApiAuthenticatonHttpClientHandler>();
+            builder.Services.AddScoped<ICouponService, CouponService>();
+            builder.Services.AddScoped<IRabbitPublisher, RabbitPublisher>();
+            builder.Services.AddHttpClient("Product", u => u.BaseAddress = new Uri(builder.Configuration["ServiceUrls:ProductAPI"])).AddHttpMessageHandler<BackendApiAuthenticatonHttpClientHandler>();  //pass bearer token from the shoppingcart to the prodctapi
+            builder.Services.AddHttpClient("Coupon", u => u.BaseAddress = new Uri(builder.Configuration["ServiceUrls:CouponAPI"]));
             builder.Services.AddSwaggerGen(option =>
             {
                 option.AddSecurityDefinition(name: JwtBearerDefaults.AuthenticationScheme, securityScheme: new OpenApiSecurityScheme

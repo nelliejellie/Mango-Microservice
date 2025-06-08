@@ -9,11 +9,11 @@ namespace Mango.Web.Services
     public class ProductService : IProductService
     {
         private readonly IBaseService _baseService;
-        private readonly string couponApiBase;
+        private readonly string productApiBase;
         public ProductService(IBaseService baseService, IConfiguration configuration)
         {
             _baseService = baseService;
-            couponApiBase = configuration.GetValue<string>("ServiceUrls:ProductApi");
+            productApiBase = configuration.GetValue<string>("ServiceUrls:ProductApi");
         }
 
         public async Task<ResponseDto?> CreateProductsAsync(ProductDto productDto)
@@ -22,7 +22,7 @@ namespace Mango.Web.Services
             {
                 ApiType = ApiType.POST,
                 Data = productDto,
-                Url = couponApiBase + "/api/product",
+                Url = productApiBase + "/api/product",
                 //ContentType = SD.ContentType.MultipartFormData
             });
         }
@@ -32,7 +32,7 @@ namespace Mango.Web.Services
             return await _baseService.SendAsync(new RequestDto()
             {
                 ApiType = ApiType.DELETE,
-                Url = couponApiBase + "/api/product/" + id
+                Url = productApiBase + "/api/product/" + id
             });
         }
 
@@ -41,7 +41,7 @@ namespace Mango.Web.Services
             return await _baseService.SendAsync(new RequestDto()
             {
                 ApiType = ApiType.GET,
-                Url = couponApiBase + "/api/product"
+                Url = productApiBase + "/api/product"
             },false);
         }
 
@@ -52,7 +52,7 @@ namespace Mango.Web.Services
             return await _baseService.SendAsync(new RequestDto()
             {
                 ApiType = ApiType.GET,
-                Url = couponApiBase + "/api/product" + id
+                Url = productApiBase + "/api/product/" + id
             });
         }
 
@@ -62,7 +62,7 @@ namespace Mango.Web.Services
             {
                 ApiType = ApiType.PUT,
                 Data = productDto,
-                Url = couponApiBase + "/api/product",
+                Url = productApiBase + "/api/product",
                // ContentType = SD.ContentType.MultipartFormData
             });
         }

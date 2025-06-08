@@ -34,9 +34,43 @@ namespace Mango.Services.AuthApi.Controllers
             if (res != null && res.StatusCode == 201)
             {
                 return Ok(res);
+
             }
             else
             {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
                 return BadRequest(res);
             }
         }

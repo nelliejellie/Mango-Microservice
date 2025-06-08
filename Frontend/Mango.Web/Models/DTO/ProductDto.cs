@@ -10,7 +10,7 @@ namespace Mango.Web.Models.DTO
         public string Description { get; set; }
         public string CategoryName { get; set; }
         public string? ImageUrl { get; set; }
-        public int Count { get; set; }
+        public int Count { get; set; } = 1;
 
     }
 }

@@ -20,6 +20,7 @@ builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IBaseService, BaseService>();
 builder.Services.AddScoped<ICouponService, CouponService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<ITokenProviderService, TokenProviderService>();
 builder.Services.AddScoped<Dynamics>();
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
