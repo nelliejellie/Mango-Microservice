@@ -8,6 +8,6 @@ namespace Mango.MessageBroker.Models
 {
     public class RabbitMqQueues
     {
-        public const string EmailQueue = "EmailQueue";
+        public const string EmailShoppingCartQueue = "EmailShoppingCartQueue";
     }
 }

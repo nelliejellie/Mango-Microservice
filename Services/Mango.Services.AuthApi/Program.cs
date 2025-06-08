@@ -4,6 +4,7 @@ using Mango.Services.AuthApi.Data;
 using Mango.Services.AuthApi.Models;
 using Mango.Services.AuthApi.Services.IService;
 using Mango.Services.AuthApi.Services;
+using Mango.MessagePublisher.Services;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -21,6 +22,7 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddEntityFrameworkStores<AppDbContext>()
     .AddDefaultTokenProviders();
 builder.Services.AddScoped<IAuthService,AuthService>();
+builder.Services.AddScoped<IRabbitPublisher, RabbitPublisher>();
 builder.Services.AddScoped<IJWTTokenGenerator,JWTTokenGenerator>();
 builder.Services.AddSwaggerGen();
 

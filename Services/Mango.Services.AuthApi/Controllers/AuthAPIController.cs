@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using Mango.Services.AuthApi.Models.DTO;
 using Mango.Services.AuthApi.Services.IService;
+using Mango.MessagePublisher.Services;
 
 namespace Mango.Services.AuthApi.Controllers
 {
@@ -17,10 +18,15 @@ namespace Mango.Services.AuthApi.Controllers
     public class AuthAPIController : ControllerBase
     {
         private readonly IAuthService _authService;
+        private readonly IRabbitPublisher _rabbitPublisher;
+        private readonly IConfiguration _configuration;
 
-        public AuthAPIController(IAuthService authService)
+        public AuthAPIController(IAuthService authService,IRabbitPublisher rabbitPublisher, IConfiguration configuration)
         {
             _authService = authService;
+            _rabbitPublisher = rabbitPublisher;
+            _configuration = configuration;
+
         }
 
 
@@ -33,44 +39,21 @@ namespace Mango.Services.AuthApi.Controllers
             var res = await _authService.Register(registerDto);
             if (res != null && res.StatusCode == 201)
             {
+                res.Message = "User registered successfully";
+                res.Success = true;
+                _rabbitPublisher.PublishMessageAsync(new EmailDto
+                {
+                    ToEmail = registerDto.Email,
+                    Subject = "Welcome to Mango",
+                    Body = $"<h1>Welcome {registerDto.Name}</h1><p>Thank you for registering with us!</p>"
+                }, _configuration["Queues:RegisterUserQueue"]);
                 return Ok(res);
 
             }
             else
             {
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+                res.Message = "User registered failed";
+                res.Success = false;
                 return BadRequest(res);
             }
         }
@@ -83,6 +66,8 @@ namespace Mango.Services.AuthApi.Controllers
             Console.WriteLine(response.StatusCode);
             if(response != null && response.StatusCode == 200)
             {
+                response.Message = "User registered successfully";
+                response.Success = true;
                 return Ok(response);
             }
             else

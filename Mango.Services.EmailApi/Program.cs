@@ -1,5 +1,7 @@
 
 using Mango.Services.EmailApi.Data;
+using Mango.Services.EmailApi.Messaging;
+using Mango.Services.EmailApi.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace Mango.Services.EmailApi
@@ -14,6 +16,10 @@ namespace Mango.Services.EmailApi
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddDbContext<AppDbContext>(options =>
                 options.UseNpgsql(builder.Configuration.GetConnectionString("localConnection")));
+            builder.Services.Configure<RabbitMqSettings>(
+            builder.Configuration.GetSection("RabbitMQ"));
+            builder.Services.AddHostedService<RabbitMQBusConsumer>();
+
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();

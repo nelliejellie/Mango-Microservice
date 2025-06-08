@@ -247,7 +247,7 @@ namespace Mango.Services.ShoppingCartAPI.Controllers
                 if (cartHeader != null)
                 {
                     cartDto.CartHeader.CartHeaderId = cartHeader.CartHeaderId;
-                    await _messageBus.PublishMessageAsync(cartDto, _configuration.GetValue<string>("Queues:EmailShoppingCart"));
+                    await _messageBus.PublishMessageAsync(cartDto, _configuration.GetValue<string>("Queues:EmailShoppingCartQueue"));
                     _responseDto.Result = true;
                 }
                 else
