@@ -11,15 +11,43 @@ namespace Mango.Web.Controllers
     public class CartController : Controller
     {
         private readonly ICartService _cartService;
-        public CartController(ICartService cartService)
+        private readonly IOrderService _orderService;
+        public CartController(ICartService cartService,IOrderService orderService)
         {
             _cartService = cartService;
+            _orderService = orderService;
         }
 
         [Authorize]
         public async Task<IActionResult> CartIndex()
         {
             return View(await LoadCartDtoBasedOnLoggedInUser());
+        }
+
+        [Authorize]
+        public async Task<IActionResult> Confirmation(int orderId)
+        {
+            return View(orderId);
+        }
+
+        [Authorize]
+        public async Task<IActionResult> Checkout()
+        {
+            return View(await LoadCartDtoBasedOnLoggedInUser());
+        }
+
+        [HttpPost]
+        [ActionName("CheckOut")]    
+        public async Task<IActionResult> Checkout(CartDto cartDto)
+        {
+            CartDto cart = await LoadCartDtoBasedOnLoggedInUser();
+            cart.CartHeader.Phone = cartDto.CartHeader.Phone;
+            cart.CartHeader.Name = cartDto.CartHeader.Name;
+            cart.CartHeader.Email = cartDto.CartHeader.Email;
+
+            var response = await _orderService.CreateOrder(cart);
+            OrderHeaderDto orderHeaderDto = JsonConvert.DeserializeObject<OrderHeaderDto>(Convert.ToString(response.Result));
+            return View();
         }
 
         [HttpPost]
@@ -31,6 +59,10 @@ namespace Mango.Web.Controllers
             {
                 TempData["success"] = "Cart updated successfully";
                 return RedirectToAction(nameof(CartIndex));
+            }
+            if(response != null && response.Success)
+            {
+                //implement paystack integration here
             }
             return View();
         }
