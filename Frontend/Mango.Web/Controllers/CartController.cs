@@ -47,6 +47,20 @@ namespace Mango.Web.Controllers
 
             var response = await _orderService.CreateOrder(cart);
             OrderHeaderDto orderHeaderDto = JsonConvert.DeserializeObject<OrderHeaderDto>(Convert.ToString(response.Result));
+            if (response != null && response.Success)
+            {
+                PaystackRequestDto paystackRequestDto = new PaystackRequestDto();
+                paystackRequestDto.OrderHeader.OrderTotal = orderHeaderDto.OrderTotal * 100; // Paystack expects amount in kobo
+                paystackRequestDto.OrderHeader.UserId = orderHeaderDto.UserId;
+                paystackRequestDto.OrderHeader.Email = orderHeaderDto.Email;
+
+                ResponseDto? paystackResponse = await _orderService.CreatePaystackSession(paystackRequestDto);
+                PaystackResponseDto Dto = JsonConvert.DeserializeObject<PaystackResponseDto>(Convert.ToString(response.Result));
+                if (paystackResponse != null && paystackResponse.Success)
+                {
+                    return Redirect(Convert.ToString(Dto.PaystackDataDto.Authorization_Url));
+                }
+            }
             return View();
         }
 

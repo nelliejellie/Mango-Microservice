@@ -12,5 +12,8 @@ namespace Mango.Services.OrderAPI.Data
         public DbSet<OrderHeader> OrderHeaders { get; set; }
         public DbSet<OrderDetails> OrderDetails { get; set; }
 
+        public DbSet<PaystackResponse> PaystackResponse { get; set; }
+        public DbSet<PaystackData> PaystackDatas { get; set; }
+
     }
 }

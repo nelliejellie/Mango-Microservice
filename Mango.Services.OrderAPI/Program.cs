@@ -18,6 +18,7 @@ namespace Mango.Services.OrderAPI
             options.UseNpgsql(builder.Configuration.GetConnectionString("localConnection")));
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
+            builder.Services.AddHttpClient();
             builder.Services.AddSwaggerGen();
             builder.AddAppAuthentication();
             var app = builder.Build();

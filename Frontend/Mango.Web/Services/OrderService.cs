@@ -25,5 +25,15 @@ namespace Mango.Web.Services
                 Data = cartDto
             });
         }
+
+        public async Task<ResponseDto> CreatePaystackSession(PaystackRequestDto cartDto)
+        {
+            return await _baseService.SendAsync(new RequestDto
+            {
+                ApiType = ApiType.POST,
+                Url = OrderApiBase + "/api/order/createpaystacksession",
+                Data = cartDto
+            });
+        }
     }
 }

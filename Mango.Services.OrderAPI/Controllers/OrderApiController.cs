@@ -6,9 +6,12 @@ using Mango.Services.OrderAPI.Services.IServices;
 using Mango.Services.OrderAPI.Utilites;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using Microsoft.Identity.Client;
+using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
+using System.Text.Json;
 
 namespace Mango.Services.OrderAPI.Controllers
 {
@@ -20,28 +23,34 @@ namespace Mango.Services.OrderAPI.Controllers
         private readonly AppDbContext _db;
         private readonly string _sk;
         private readonly string _PaystackBaseUrl;
+        private readonly IHttpClientFactory _httpClientFactory;
+        private readonly string _FrontendBaseUrl; // Adjust as needed
         private readonly string _PaystackCallbackUrl; // Adjust as needed
         private IProductService _productService;
         private readonly IConfiguration _configuration;
+
+
         public OrderApiController(AppDbContext db,
-            IProductService productService, IConfiguration configuration
+            IProductService productService, IConfiguration configuration, IHttpClientFactory httpClientFactory
             )
         {
             _db = db;
             _response = new ResponseDto();
             _productService = productService;
+            _httpClientFactory = httpClientFactory;
             _configuration = configuration;
             _sk = configuration.GetValue<string>("Paystack:SecretKey");
             _PaystackBaseUrl = configuration.GetValue<string>("Paystack:InitialiseUrl");
             _PaystackCallbackUrl = configuration.GetValue<string>("Paystack:CallbackUrl");
+            _FrontendBaseUrl = configuration.GetValue<string>("ServiceUrls:frontendUrl");
         }
 
-        [HttpPost]
+        [HttpPost("createpaystacksession")]
         public async Task<ResponseDto> CreatePaystackSession(PaystackRequestDto paystackRequest)
         {
             try
             {
-                var httpClient = new HttpClient();
+                var httpClient = _httpClientFactory.CreateClient();
                 httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _sk);
 
                 var requestData = new
@@ -56,7 +65,14 @@ namespace Mango.Services.OrderAPI.Controllers
 
                 var response = await httpClient.PostAsync(_PaystackBaseUrl, content);
                 var responseString = await response.Content.ReadAsStringAsync();
-
+                var options = new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true // Allows camelCase or PascalCase matching
+                };
+                var paystackResponse = JsonSerializer.Deserialize<PaystackResponse>(responseString, options);
+                _response.Success = true;
+                _response.Result = paystackResponse; // You might want to deserialize this into a specific DTO
+                _response.Message = "Paystack session created successfully.";
                 Console.WriteLine("Response from Paystack:");
                 Console.WriteLine(responseString);
             }
@@ -68,6 +84,48 @@ namespace Mango.Services.OrderAPI.Controllers
             }
             return _response;
         }
+
+        [HttpGet("/payment/callback")]
+        public async Task<IActionResult> PaystackCallback([FromQuery] string reference)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(reference))
+                {
+                    _response.Success = false;
+                    return Redirect($"{_FrontendBaseUrl}/payment-failed");
+                }
+
+                var client = _httpClientFactory.CreateClient();
+                client.DefaultRequestHeaders.Authorization =
+                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _configuration["Paystack:SecretKey"]);
+
+                var response = await client.GetAsync($"https://api.paystack.co/transaction/verify/{reference}");
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    _response.Success = false;
+                    return Redirect($"{_FrontendBaseUrl}/payment-failed");
+                }
+                // Optionally: parse the response JSON and update order status in your database
+                // Example:
+                // var transactionData = JsonSerializer.Deserialize<PaystackVerifyResponse>(responseContent);
+                _response.Success = true;
+                _response.Message = "Payment verification successful";
+                _response.Result = responseContent; // You can return the raw content or parse it into a DTO
+                return Redirect($"{_FrontendBaseUrl}/payment-success?reference={reference}");
+
+            }
+            catch (Exception ex)
+            {
+                _response.Success = false;
+                _response.Message = ex.Message;
+                return Redirect($"{_FrontendBaseUrl}/payment-failed");
+            }
+            
+        }
+
 
         public async Task<ResponseDto> CreateOrder([FromBody]CartDto cartDto)
         {
