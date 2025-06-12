@@ -1,11 +1,8 @@
 
-using Mango.MessagePublisher.Services;
-using Mango.Services.OrderAPI.Data;
-using Mango.Services.OrderAPI.Extensions;
-using MassTransit.Testing;
+using Mango.Services.RewardApi.Data;
 using Microsoft.EntityFrameworkCore;
 
-namespace Mango.Services.OrderAPI
+namespace Mango.Services.RewardApi
 {
     public class Program
     {
@@ -14,16 +11,14 @@ namespace Mango.Services.OrderAPI
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
-
-            builder.Services.AddControllers();
             builder.Services.AddDbContext<AppDbContext>(options =>
-            options.UseNpgsql(builder.Configuration.GetConnectionString("localConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("localConnection")));
+            builder.Services.AddControllers();
+                
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddScoped<IRabbitPublisher, RabbitPublisher>();
-            builder.Services.AddHttpClient();
             builder.Services.AddSwaggerGen();
-            builder.AddAppAuthentication();
+
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
@@ -39,8 +34,20 @@ namespace Mango.Services.OrderAPI
 
 
             app.MapControllers();
-
+            ApplyMigrations();
             app.Run();
+
+            void ApplyMigrations()
+            {
+                using (var scope = app.Services.CreateScope())
+                {
+                    var _db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                    if (_db.Database.GetPendingMigrations().Any())
+                    {
+                        _db.Database.Migrate();
+                    }
+                }
+            }
         }
     }
 }

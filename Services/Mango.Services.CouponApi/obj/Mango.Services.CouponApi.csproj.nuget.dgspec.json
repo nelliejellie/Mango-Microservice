@@ -1,23 +1,23 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\EEwelike\\OneDrive - SecureID Group\\Desktop\\Mango\\Mango-Microservice\\Services\\Mango.Services.CouponApi\\Mango.Services.CouponApi.csproj": {}
+    "C:\\Users\\emeka.ewelike\\source\\repos\\Mango\\Services\\Mango.Services.CouponApi\\Mango.Services.CouponApi.csproj": {}
   },
   "projects": {
-    "C:\\Users\\EEwelike\\OneDrive - SecureID Group\\Desktop\\Mango\\Mango-Microservice\\Services\\Mango.Services.CouponApi\\Mango.Services.CouponApi.csproj": {
+    "C:\\Users\\emeka.ewelike\\source\\repos\\Mango\\Services\\Mango.Services.CouponApi\\Mango.Services.CouponApi.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\EEwelike\\OneDrive - SecureID Group\\Desktop\\Mango\\Mango-Microservice\\Services\\Mango.Services.CouponApi\\Mango.Services.CouponApi.csproj",
+        "projectUniqueName": "C:\\Users\\emeka.ewelike\\source\\repos\\Mango\\Services\\Mango.Services.CouponApi\\Mango.Services.CouponApi.csproj",
         "projectName": "Mango.Services.CouponApi",
-        "projectPath": "C:\\Users\\EEwelike\\OneDrive - SecureID Group\\Desktop\\Mango\\Mango-Microservice\\Services\\Mango.Services.CouponApi\\Mango.Services.CouponApi.csproj",
-        "packagesPath": "C:\\Users\\EEwelike\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\EEwelike\\OneDrive - SecureID Group\\Desktop\\Mango\\Mango-Microservice\\Services\\Mango.Services.CouponApi\\obj\\",
+        "projectPath": "C:\\Users\\emeka.ewelike\\source\\repos\\Mango\\Services\\Mango.Services.CouponApi\\Mango.Services.CouponApi.csproj",
+        "packagesPath": "C:\\Users\\emeka.ewelike\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\emeka.ewelike\\source\\repos\\Mango\\Services\\Mango.Services.CouponApi\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\EEwelike\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\emeka.ewelike\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
@@ -44,7 +44,7 @@
           "auditLevel": "low",
           "auditMode": "direct"
         },
-        "SdkAnalysisLevel": "9.0.300"
+        "SdkAnalysisLevel": "9.0.200"
       },
       "frameworks": {
         "net8.0": {
@@ -104,7 +104,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.300/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.204/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

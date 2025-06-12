@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Mango.MessagePublisher.Services;
 using Mango.Services.OrderAPI.Data;
 using Mango.Services.OrderAPI.Models;
 using Mango.Services.OrderAPI.Models.Dto;
@@ -6,12 +7,11 @@ using Mango.Services.OrderAPI.Services.IServices;
 using Mango.Services.OrderAPI.Utilites;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
 using Microsoft.Identity.Client;
+using Newtonsoft.Json;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
-using System.Text.Json;
 
 namespace Mango.Services.OrderAPI.Controllers
 {
@@ -23,34 +23,36 @@ namespace Mango.Services.OrderAPI.Controllers
         private readonly AppDbContext _db;
         private readonly string _sk;
         private readonly string _PaystackBaseUrl;
-        private readonly IHttpClientFactory _httpClientFactory;
-        private readonly string _FrontendBaseUrl; // Adjust as needed
+        private readonly IRabbitPublisher _rabbitPublisher; // 
         private readonly string _PaystackCallbackUrl; // Adjust as needed
         private IProductService _productService;
         private readonly IConfiguration _configuration;
-
-
+        private readonly string _FrontendBaseUrl; // Adjust as needed
+        private readonly IHttpClientFactory _httpClientFactory;
         public OrderApiController(AppDbContext db,
-            IProductService productService, IConfiguration configuration, IHttpClientFactory httpClientFactory
+            IProductService productService, IConfiguration configuration,
+            IHttpClientFactory httpClientFactory,
+            IRabbitPublisher rabbitPublisher
             )
         {
             _db = db;
             _response = new ResponseDto();
+            _rabbitPublisher = rabbitPublisher;
             _productService = productService;
-            _httpClientFactory = httpClientFactory;
             _configuration = configuration;
             _sk = configuration.GetValue<string>("Paystack:SecretKey");
             _PaystackBaseUrl = configuration.GetValue<string>("Paystack:InitialiseUrl");
             _PaystackCallbackUrl = configuration.GetValue<string>("Paystack:CallbackUrl");
             _FrontendBaseUrl = configuration.GetValue<string>("ServiceUrls:frontendUrl");
+            _httpClientFactory = httpClientFactory;
         }
 
-        [HttpPost("createpaystacksession")]
+        [HttpPost]
         public async Task<ResponseDto> CreatePaystackSession(PaystackRequestDto paystackRequest)
         {
             try
             {
-                var httpClient = _httpClientFactory.CreateClient();
+                var httpClient = new HttpClient();
                 httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _sk);
 
                 var requestData = new
@@ -65,14 +67,7 @@ namespace Mango.Services.OrderAPI.Controllers
 
                 var response = await httpClient.PostAsync(_PaystackBaseUrl, content);
                 var responseString = await response.Content.ReadAsStringAsync();
-                var options = new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true // Allows camelCase or PascalCase matching
-                };
-                var paystackResponse = JsonSerializer.Deserialize<PaystackResponse>(responseString, options);
-                _response.Success = true;
-                _response.Result = paystackResponse; // You might want to deserialize this into a specific DTO
-                _response.Message = "Paystack session created successfully.";
+
                 Console.WriteLine("Response from Paystack:");
                 Console.WriteLine(responseString);
             }
@@ -102,6 +97,7 @@ namespace Mango.Services.OrderAPI.Controllers
 
                 var response = await client.GetAsync($"https://api.paystack.co/transaction/verify/{reference}");
                 var responseContent = await response.Content.ReadAsStringAsync();
+                VerificationResponseDto Dto = JsonConvert.DeserializeObject<VerificationResponseDto>(Convert.ToString(response));
 
                 if (!response.IsSuccessStatusCode)
                 {
@@ -111,6 +107,15 @@ namespace Mango.Services.OrderAPI.Controllers
                 // Optionally: parse the response JSON and update order status in your database
                 // Example:
                 // var transactionData = JsonSerializer.Deserialize<PaystackVerifyResponse>(responseContent);
+
+
+                RewardsDto rewards = new RewardsDto();
+                rewards.UserID = User.FindFirst("sub")?.Value; // Assuming you have user ID in JWT token
+                rewards.RewardsActivity = Convert.ToInt32(Dto.Data.Amount);
+
+                await _rabbitPublisher.PublishFanOutMessageAsync(rewards, _configuration.GetValue<string>("Queues:OrderCreated"));
+
+
                 _response.Success = true;
                 _response.Message = "Payment verification successful";
                 _response.Result = responseContent; // You can return the raw content or parse it into a DTO
@@ -123,9 +128,8 @@ namespace Mango.Services.OrderAPI.Controllers
                 _response.Message = ex.Message;
                 return Redirect($"{_FrontendBaseUrl}/payment-failed");
             }
-            
-        }
 
+        }
 
         public async Task<ResponseDto> CreateOrder([FromBody]CartDto cartDto)
         {

@@ -1,19 +1,18 @@
-﻿using Mango.Services.EmailApi.Models;
-using Microsoft.EntityFrameworkCore.Metadata;
+﻿using Mango.Services.RewardApi.Models;
 using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System.Text;
 
-namespace Mango.Services.EmailApi.Messaging
+namespace Mango.Services.RewardApi.Messaging
 {
-    public class RabbitMQBusConsumer : BackgroundService
+    public class RabbitMqOrderConsumer: BackgroundService
     {
         private readonly RabbitMqSettings _settings;
         private IConnection _connection;
         private IChannel? _channel;
 
-        public  RabbitMQBusConsumer(IOptions<RabbitMqSettings> options)
+        public RabbitMqOrderConsumer(IOptions<RabbitMqSettings> options)
         {
             _settings = options.Value;
         }
@@ -31,14 +30,9 @@ namespace Mango.Services.EmailApi.Messaging
             _connection = await factory.CreateConnectionAsync();
             _channel = await _connection.CreateChannelAsync();
 
+            await _channel.ExchangeDeclareAsync("order.events", ExchangeType.Fanout);
             await _channel.QueueDeclareAsync(
-                queue: _settings.EmailShoppingCartQueue,
-                durable: true,
-                exclusive: false,
-                autoDelete: false
-            );
-            await _channel.QueueDeclareAsync(
-                queue: _settings.RegisterUserQueue,
+                queue: _settings.OrderCreatedQueue,
                 durable: true,
                 exclusive: false,
                 autoDelete: false
@@ -50,17 +44,13 @@ namespace Mango.Services.EmailApi.Messaging
                 var body = args.Body.ToArray();
                 var message = Encoding.UTF8.GetString(body);
 
-                Console.WriteLine($"[EmailAPI] Received: {message}");
-                Console.WriteLine($"[EmailAPI] Sending Email: {message}");
+                Console.WriteLine($"[RewardsAPI] Received: {message}");
 
                 _channel.BasicAckAsync(args.DeliveryTag, false);
                 await Task.CompletedTask;
             };
 
-            _channel.BasicConsumeAsync(queue: _settings.EmailShoppingCartQueue, autoAck: false, consumer: consumer);
-            _channel.BasicConsumeAsync(queue: _settings.RegisterUserQueue, autoAck: false, consumer: consumer);
-            
-
+            _channel.BasicConsumeAsync(queue: _settings.OrderCreatedQueue, autoAck: false, consumer: consumer);
 
             // Keep the background service running
             while (!stoppingToken.IsCancellationRequested)

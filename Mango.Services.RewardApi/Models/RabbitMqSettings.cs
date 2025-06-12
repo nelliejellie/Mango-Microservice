@@ -1,4 +1,4 @@
-﻿namespace Mango.Services.EmailApi.Models
+﻿namespace Mango.Services.RewardApi.Models
 {
     public class RabbitMqSettings
     {

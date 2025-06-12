@@ -1,5 +1,5 @@
-﻿using Mango.Services.EmailApi.Models;
-using Microsoft.EntityFrameworkCore.Metadata;
+﻿
+using Mango.Services.EmailApi.Models;
 using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
@@ -7,17 +7,16 @@ using System.Text;
 
 namespace Mango.Services.EmailApi.Messaging
 {
-    public class RabbitMQBusConsumer : BackgroundService
+    public class RabbitMqOrderConsumer : BackgroundService
     {
         private readonly RabbitMqSettings _settings;
         private IConnection _connection;
         private IChannel? _channel;
 
-        public  RabbitMQBusConsumer(IOptions<RabbitMqSettings> options)
+        public RabbitMqOrderConsumer(IOptions<RabbitMqSettings> options)
         {
             _settings = options.Value;
         }
-
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             var factory = new ConnectionFactory()
@@ -31,14 +30,9 @@ namespace Mango.Services.EmailApi.Messaging
             _connection = await factory.CreateConnectionAsync();
             _channel = await _connection.CreateChannelAsync();
 
+            await _channel.ExchangeDeclareAsync("order.events", ExchangeType.Fanout);
             await _channel.QueueDeclareAsync(
-                queue: _settings.EmailShoppingCartQueue,
-                durable: true,
-                exclusive: false,
-                autoDelete: false
-            );
-            await _channel.QueueDeclareAsync(
-                queue: _settings.RegisterUserQueue,
+                queue: _settings.OrderCreatedQueue,
                 durable: true,
                 exclusive: false,
                 autoDelete: false
@@ -57,11 +51,8 @@ namespace Mango.Services.EmailApi.Messaging
                 await Task.CompletedTask;
             };
 
-            _channel.BasicConsumeAsync(queue: _settings.EmailShoppingCartQueue, autoAck: false, consumer: consumer);
-            _channel.BasicConsumeAsync(queue: _settings.RegisterUserQueue, autoAck: false, consumer: consumer);
+            _channel.BasicConsumeAsync(queue: _settings.OrderCreatedQueue, autoAck: false, consumer: consumer);
             
-
-
             // Keep the background service running
             while (!stoppingToken.IsCancellationRequested)
             {
