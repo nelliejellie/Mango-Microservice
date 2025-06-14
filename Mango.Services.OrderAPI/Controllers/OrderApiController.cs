@@ -5,8 +5,10 @@ using Mango.Services.OrderAPI.Models;
 using Mango.Services.OrderAPI.Models.Dto;
 using Mango.Services.OrderAPI.Services.IServices;
 using Mango.Services.OrderAPI.Utilites;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Identity.Client;
 using Newtonsoft.Json;
 using System.Net.Http;
@@ -46,6 +48,100 @@ namespace Mango.Services.OrderAPI.Controllers
             _FrontendBaseUrl = configuration.GetValue<string>("ServiceUrls:frontendUrl");
             _httpClientFactory = httpClientFactory;
         }
+
+       
+
+
+        [Authorize]
+        [HttpGet("GetOrders")]
+        public async Task<ResponseDto> GetOrders(string? userId = "")
+        {
+            try
+            {
+                IEnumerable<OrderHeader> objList;
+                if(User.IsInRole(StaticDetails.RoleAdmin))
+                {
+                    objList = await _db.OrderHeaders.Include(o => o.OrderDetails)
+                        .ThenInclude(od => od.Product).ToListAsync();
+                }
+                else
+                {
+                    objList = await _db.OrderHeaders.Include(o => o.OrderDetails)
+                        .ThenInclude(od => od.Product)
+                        .Where(u => u.UserId == userId).ToListAsync();
+                }
+
+                OrderHeaderDto orderHeaderDto = new OrderHeaderDto();
+                List<OrderHeaderDto> orderHeaderDtoList = new List<OrderHeaderDto>();
+                foreach (var obj in objList)
+                {
+                    orderHeaderDto = new OrderHeaderDto
+                    {
+                        OrderHeaderId = obj.OrderHeaderId,
+                        UserId = obj.UserId,
+                        Name = obj.Name,
+                        Phone = obj.Phone,
+                        Email = obj.Email,
+                        CouponCode = obj.CouponCode,
+                        Discount = obj.Discount,
+                        OrderTotal = obj.OrderTotal,
+                        Status = obj.Status,
+                        OrderTime = obj.OrderTime,
+                        PaymentIntentId = obj.PaymentIntentId,
+                        PaystackSessionId = obj.PaystackSessionId,
+                        OrderDetails = obj.OrderDetails.Select(od => new OrderDetailsDto
+                        {
+                            OrderDetailsId = od.OrderDetailsId,
+                            ProductId = od.ProductId,
+                            Count = od.Count,
+                            ProductName = od.ProductName,
+                            Price = od.Price
+                            // Add other necessary fields as needed
+                        }).ToList()
+                    };
+                    orderHeaderDtoList.Add(orderHeaderDto);
+                }
+                _response.Result = orderHeaderDtoList;
+
+            }
+            catch (Exception ex)
+            {
+                _response.Success = false;
+                _response.Message = ex.Message;
+            }
+            return _response;
+        }
+
+        [Authorize]
+        [HttpPost("UpdateOrderStatus/{orderId:int}")]
+        public async Task<ResponseDto> UpdateOrderStatus(int orderId, [FromBody] string status)
+        {
+            try
+            {
+                var orderHeader = await _db.OrderHeaders.FindAsync(orderId);
+                if (orderHeader == null)
+                {
+                    _response.Success = false;
+                    _response.Message = "Order not found";
+                    return _response;
+                } 
+                
+                orderHeader.Status = status;
+                await _db.SaveChangesAsync();
+                _response.Result = new OrderHeaderDto
+                {
+                    OrderHeaderId = orderHeader.OrderHeaderId,
+                    Status = orderHeader.Status
+                };
+            }
+            catch (Exception ex)
+            {
+                _response.Success = false;
+                _response.Message = ex.Message;
+            }
+            return _response;
+        }
+
 
         [HttpPost]
         public async Task<ResponseDto> CreatePaystackSession(PaystackRequestDto paystackRequest)
@@ -209,6 +305,49 @@ namespace Mango.Services.OrderAPI.Controllers
                 _response.Success = false;
                 _response.Message = ex.Message;
                 
+            }
+            return _response;
+        }
+
+        [Authorize]
+        [HttpGet("GetOrder/{id:int}")]
+        public ResponseDto? Get(int id)
+        {
+            try
+            {
+                OrderHeader orderHeader = _db.OrderHeaders.Include(o => o.OrderDetails)
+                    .First(u => u.OrderHeaderId == id);
+
+                OrderHeaderDto orderHeaderDto = new OrderHeaderDto
+                {
+                    OrderHeaderId = orderHeader.OrderHeaderId,
+                    UserId = orderHeader.UserId,
+                    Name = orderHeader.Name,
+                    Phone = orderHeader.Phone,
+                    Email = orderHeader.Email,
+                    CouponCode = orderHeader.CouponCode,
+                    Discount = orderHeader.Discount,
+                    OrderTotal = orderHeader.OrderTotal,
+                    Status = orderHeader.Status,
+                    OrderTime = orderHeader.OrderTime,
+                    PaymentIntentId = orderHeader.PaymentIntentId,
+                    PaystackSessionId = orderHeader.PaystackSessionId,
+                    OrderDetails = orderHeader.OrderDetails.Select(od => new OrderDetailsDto
+                    {
+                        OrderDetailsId = od.OrderDetailsId,
+                        ProductId = od.ProductId,
+                        Count = od.Count,
+                        ProductName = od.ProductName,
+                        Price = od.Price
+                        // Add other necessary fields as needed
+                    }).ToList()
+                };
+                _response.Result = orderHeaderDto;
+            }
+            catch (Exception ex)
+            {   
+                _response.Success = false;
+                _response.Message = ex.Message;
             }
             return _response;
         }

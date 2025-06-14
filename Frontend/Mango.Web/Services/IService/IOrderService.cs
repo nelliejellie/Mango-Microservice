@@ -7,5 +7,10 @@ namespace Mango.Web.Services.IService
     {
         Task<ResponseDto> CreateOrder(CartDto cartDto);
         Task<ResponseDto> CreatePaystackSession(PaystackRequestDto cartDto);
+        Task<ResponseDto> PaystackCallback(string referenceId);
+        Task<ResponseDto> GetOrderById(int orderId);
+        Task<ResponseDto> GetOrders(string userId);
+        Task<ResponseDto> UpdateOrderStatus(string orderId, string newStatus);
+
     }
 }
