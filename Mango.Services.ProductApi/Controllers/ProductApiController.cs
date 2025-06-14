@@ -1,4 +1,5 @@
-﻿using Mango.Services.ProductApi.Data;
+﻿using Azure;
+using Mango.Services.ProductApi.Data;
 using Mango.Services.ProductApi.Models;
 using Mango.Services.ProductApi.Models.DTO;
 using Microsoft.AspNetCore.Authorization;
@@ -80,6 +81,72 @@ namespace Mango.Services.ProductApi.Controllers
             }
             return _responseDto;
         }
+
+        [HttpPost]
+        [Authorize(Roles = "ADMIN")]
+        public ResponseDto Post(ProductDto ProductDto)
+        {
+            try
+            {
+                Product product = new Product
+                {
+                    Name = ProductDto.Name,
+                    Price = ProductDto.Price,
+                    Description = ProductDto.Description,
+                    CategoryName = ProductDto.CategoryName,
+                    ImageUrl = ProductDto.ImageUrl,
+                    ImageLocalPath = ProductDto.ImageLocalPath
+                };
+                _context.Products.Add(product);
+                _context.SaveChanges();
+
+                if (ProductDto.Image != null)
+                {
+
+                    string fileName = product.ProductId + Path.GetExtension(ProductDto.Image.FileName);
+                    string filePath = @"wwwroot\ProductImages\" + fileName;
+
+                    //I have added the if condition to remove the any image with same name if that exist in the folder by any change
+                    var directoryLocation = Path.Combine(Directory.GetCurrentDirectory(), filePath);
+                    FileInfo file = new FileInfo(directoryLocation);
+                    if (file.Exists)
+                    {
+                        file.Delete();
+                    }
+
+                    var filePathDirectory = Path.Combine(Directory.GetCurrentDirectory(), filePath);
+                    using (var fileStream = new FileStream(filePathDirectory, FileMode.Create))
+                    {
+                        ProductDto.Image.CopyTo(fileStream);
+                    }
+                    var baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.Value}{HttpContext.Request.PathBase.Value}";
+                    product.ImageUrl = baseUrl + "/ProductImages/" + fileName;
+                    product.ImageLocalPath = filePath;
+                }
+                else
+                {
+                    product.ImageUrl = "https://placehold.co/600x400";
+                }
+                _context.Products.Update(product);
+                _context.SaveChanges();
+                _responseDto.Result = new ProductDto
+                {
+                    ProductId = product.ProductId,
+                    Name = product.Name,
+                    Price = product.Price,
+                    Description = product.Description,
+                    CategoryName = product.CategoryName,
+                    ImageUrl = product.ImageUrl
+                };
+            }
+            catch (Exception ex)
+            {
+                _responseDto.Success = false;
+                _responseDto.Message = ex.Message;
+            }
+            return _responseDto;
+        }
+
     }
 
 }

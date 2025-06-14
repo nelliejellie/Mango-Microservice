@@ -29,15 +29,51 @@ namespace Mango.Web.Services
             {
                 HttpClient client = _httpClientFactory.CreateClient("MangoAPI");
                 HttpRequestMessage message = new HttpRequestMessage();
-                message.Headers.Add("Accept", "application/json");
-                if(withBearer)
+                
+                if(request.ContentType == ContentTypes.ContentTypeEnum.MultipartFormData)
+                {
+                    message.Headers.Add("Content-Type", "multipart/form-data");
+                }
+                else if (request.ContentType == ContentTypes.ContentTypeEnum.FormUrlEncoded)
+                {
+                    message.Headers.Add("Content-Type", "application/x-www-form-urlencoded");
+                }
+                else
+                {
+                    message.Headers.Add("Content-Type", "application/json");
+                }
+                if (withBearer)
                 {
                     var token = _tokenProviderService.GetToken();
                     message.Headers.Add("Authorization", $"Bearer {token}");
                 }
                 message.RequestUri = new Uri(request.Url);
 
-                if(request.Data != null)
+                if (request.ContentType == ContentTypes.ContentTypeEnum.MultipartFormData)
+                { 
+                    var content = new MultipartFormDataContent();
+                    foreach(var prop in request.Data.GetType().GetProperties())
+                    {
+                        var value = prop.GetValue(request.Data);
+                        if(value is FormFile)
+                        {
+                            var file = (FormFile)value;
+                            if(file != null)
+                            {
+                                content.Add(new StreamContent(file.OpenReadStream()), file.Name, file.FileName);
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    if (request.Data != null)
+                    {
+                        message.Content = new StringContent(JsonConvert.SerializeObject(request.Data), Encoding.UTF8, "application/json");
+                    }
+                }
+
+                if (request.Data != null)
                 {
                     message.Content = new StringContent(JsonConvert.SerializeObject(request.Data), Encoding.UTF8, "application/json");
                 }

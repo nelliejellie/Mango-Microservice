@@ -86,7 +86,7 @@ namespace Mango.Services.ProductApi
             
 
             app.UseAuthorization();
-
+            app.UseStaticFiles();
 
             app.MapControllers();
 

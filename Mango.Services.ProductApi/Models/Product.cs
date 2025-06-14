@@ -13,5 +13,6 @@ namespace Mango.Services.ProductApi.Models
         public decimal Price { get; set; }
         public string Description { get; set; } = string.Empty;
         public string CategoryName { get; set; } = string.Empty;
+        public string? ImageLocalPath { get; set; }
     }
 }
