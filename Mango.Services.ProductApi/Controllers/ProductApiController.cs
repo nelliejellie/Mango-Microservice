@@ -1,5 +1,6 @@
 ﻿using Azure;
 using Mango.Services.ProductApi.Data;
+using Mango.Services.ProductApi.Migrations;
 using Mango.Services.ProductApi.Models;
 using Mango.Services.ProductApi.Models.DTO;
 using Microsoft.AspNetCore.Authorization;
@@ -138,6 +139,84 @@ namespace Mango.Services.ProductApi.Controllers
                     CategoryName = product.CategoryName,
                     ImageUrl = product.ImageUrl
                 };
+            }
+            catch (Exception ex)
+            {
+                _responseDto.Success = false;
+                _responseDto.Message = ex.Message;
+            }
+            return _responseDto;
+        }
+
+        [HttpDelete]
+        [Route("id:int")]
+        [Authorize(Roles = "ADMIN")]
+        public ResponseDto Delete(int id)
+        {
+            try
+            {
+                Product obj = _context.Products.First(x => x.ProductId == id);
+                if (!string.IsNullOrEmpty(obj.ImageLocalPath))
+                {
+                    var oldFilePathDirectory = Path.Combine(Directory.GetCurrentDirectory(), obj.ImageLocalPath);
+                    FileInfo file = new FileInfo(oldFilePathDirectory);
+                    if (file.Exists) { 
+                        file.Delete();
+                    }
+                }
+
+                _context.Remove(obj);
+            }
+            catch (Exception ex)    
+            {
+                _responseDto.Success = false;
+                _responseDto.Message = ex.Message;
+            }
+            return _responseDto;
+        }
+
+        [HttpPut]
+        [Authorize(Roles = "ADMIN")]
+        public ResponseDto Put(ProductDto productDto)
+        {
+            try
+            {
+                Product obj = new Product
+                {
+                    ImageUrl = productDto.ImageUrl,
+                    CategoryName = productDto.CategoryName,
+                    Description = productDto.Description,
+                    ImageLocalPath = productDto.ImageLocalPath,
+                    Name = productDto.Name,
+                    Price = productDto.Price,
+                    ProductId = productDto.ProductId,
+                    
+                };
+                if (productDto.ImageUrl != null) {
+                    if (!string.IsNullOrEmpty(obj.ImageLocalPath))
+                    {
+                        var oldFilePathDirectory = Path.Combine(Directory.GetCurrentDirectory(), obj.ImageLocalPath);
+                        FileInfo file = new FileInfo(oldFilePathDirectory);
+                        if (file.Exists)
+                        {
+                            file.Delete();
+                        }
+                    }
+                }
+
+                string filename = obj.ProductId + Path.GetExtension(productDto.Image.FileName);
+                string filePath = @"wwwroot\ProductImages\" + filename;
+                var filePathDirectory = Path.Combine(Directory.GetCurrentDirectory(), filePath);
+                using (var fileStream = new FileStream(filePathDirectory, FileMode.Create))
+                {
+                    productDto.Image.CopyTo(fileStream);
+                }
+                var baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.Value}{HttpContext.Request.PathBase.Value}";
+                obj.ImageUrl = baseUrl + "/ProductImages/" + filename;
+                obj.ImageLocalPath = filePath;
+
+                _context.Products.Update(obj);
+                _context.SaveChanges();
             }
             catch (Exception ex)
             {
