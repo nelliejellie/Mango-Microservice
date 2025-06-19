@@ -52,6 +52,7 @@ namespace Mango.MessagePublisher.Services
 
             IConnection conn = await factory.CreateConnectionAsync();
             IChannel channel = await conn.CreateChannelAsync();
+            await channel.QueueDeclareAsync(queue: queueName);
             var messageJson = JsonConvert.SerializeObject(message);
             var body = Encoding.UTF8.GetBytes(messageJson);
             var props = new BasicProperties();
